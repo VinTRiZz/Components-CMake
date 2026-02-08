@@ -1,0 +1,37 @@
+# Local apps configuration
+
+
+# Common library configuration function
+function(COMPONENTS_CCR_CONFIGURE_APP CCR_APP_NAME CCR_APP_ROOT_DIR)
+    # Files
+    file(GLOB_RECURSE HEADERS "${CCR_APP_ROOT_DIR}/src/*.hpp" "${CCR_APP_ROOT_DIR}/src/*.h")
+    file(GLOB_RECURSE SOURCES "${CCR_APP_ROOT_DIR}/src/*.cpp")
+    file(GLOB_RECURSE UIFILES "${CCR_APP_ROOT_DIR}/src/*.ui")
+    source_group("Ui Files" FILES ${UIFILES})
+
+    # Library target
+    add_executable(${CCR_APP_NAME})
+    target_sources(${CCR_APP_NAME} PRIVATE ${HEADERS} ${SOURCES} ${UIFILES})
+
+    # Installation
+    install(TARGETS ${CCR_APP_NAME}
+        RUNTIME     DESTINATION ${INSTALL_DESTINATION_PREFIX}
+        LIBRARY     DESTINATION ${INSTALL_DESTINATION_PREFIX}/lib
+        ARCHIVE     DESTINATION ${INSTALL_DESTINATION_PREFIX}/lib/static
+        INCLUDES    DESTINATION ${INSTALL_DESTINATION_PREFIX}/include
+    )
+    set(CCR_LIBRARY_LINKS ${ARGN})
+
+    # Target linking
+    target_link_libraries(${CCR_APP_NAME} PRIVATE ${CCR_LIBRARY_LINKS} )
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(${CCR_APP_NAME} PRIVATE -g)
+        set_target_properties(${CCR_APP_NAME} PROPERTIES SUFFIX ".bin.DEBUG")
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+        target_compile_options(${CCR_APP_NAME} PRIVATE -O2)
+        set_target_properties(${CCR_APP_NAME} PROPERTIES SUFFIX ".bin")
+    endif()
+
+    # Includes
+    message(STATUS "Configured application " ${CCR_APP_NAME})
+endfunction()

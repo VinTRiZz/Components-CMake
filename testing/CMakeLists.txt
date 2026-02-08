@@ -1,0 +1,8 @@
+set(TESTING_GTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/googletest)
+
+if(NOT EXISTS ${TESTING_GTEST_DIR})
+    message(FATAL_ERROR "[COMPONENTS] Error searching for GTest: directory ${TESTING_GTEST_DIR} not exist")
+endif()
+
+enable_testing()
+add_subdirectory(${TESTING_GTEST_DIR})

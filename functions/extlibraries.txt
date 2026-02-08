@@ -1,0 +1,31 @@
+# Configuration of external libraries that project uses (such as Qt, OpenCV, etc.)
+
+# Version of Qt and it's components to search and link
+function (COMPONENTS_CCR_ADD_QT CCR_QTVERS)
+    # Sugar
+    set(CMAKE_AUTOUIC ON)
+    set(CMAKE_AUTOMOC ON)
+    set(CMAKE_AUTORCC ON)
+
+    # Packages
+    find_package(QT NAMES Qt${CCR_QTVERS} REQUIRED COMPONENTS ${ARGN})
+    find_package(Qt${CCR_QTVERS} REQUIRED COMPONENTS ${ARGN})
+
+    message(STATUS "[COMPONENTS] Found Qt${CCR_QTVERS} components: ${ARGN}")
+endfunction()
+
+
+# Libraries to use. Parameters:
+# Target to link into
+# Library to search (such as OpenCV)
+# all other args -- components of library to link (such as opencv_core, opencv_imgproc etc.)
+function (COMPONENTS_CCR_LINK_LIBRARY CCR_ALIASNAME)
+    # Search for library
+    find_package(${CCR_LIBNAME} REQUIRED)
+
+    # Link it
+    target_link_libraries(${CCR_ALIASNAME} ${ARGN})
+
+    message(STATUS "[COMPONENTS] Found ${CCR_ALIASNAME} components: ${ARGN}")
+endfunction()
+

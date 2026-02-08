@@ -1,0 +1,67 @@
+# Common functions
+
+# Project definition
+function (COMPONENTS_CCR_DEFINE_PROJECT CCR_PROJ_NAME CCR_PROJECT_VERSION)
+
+    # Components system variables
+    set_property(GLOBAL PROPERTY COMPONENTS_CCR_PROJECT_NAME ${CCR_PROJ_NAME})
+    set_property(GLOBAL PROPERTY COMPONENTS_CCR_PROJECT_ROOTDIR ${CMAKE_CURRENT_SOURCE_DIR})
+    get_property(COMPONENTS_CCR_PROJECT_ROOTDIR GLOBAL PROPERTY COMPONENTS_CCR_PROJECT_ROOTDIR)
+    message(STATUS "[COMPONENTS] Configuring project ${COMPONENTS_CCR_PROJECT_NAME} in ${COMPONENTS_CCR_PROJECT_ROOTDIR}")
+
+    # Tests
+    option(${CCR_PROJ_NAME}_BUILD_TESTS OFF)
+
+    # In-app defines
+    add_compile_definitions(PROJECT_VERSION_STRING="${PROJECT_VERSION}")
+    add_compile_definitions(PROJECT_NAME_STRING="${PROJECT_NAME}")
+    message(STATUS "[COMPONENTS] Added C++ defines: PROJECT_NAME_STRING PROJECT_VERSION_STRING")
+
+    # Installation
+    set(INSTALL_DESTINATION_PREFIX
+        "${CMAKE_CURRENT_SOURCE_DIR}/BIN"
+    )
+
+    # Defines for components libs
+    set_property(GLOBAL PROPERTY COMPONENTS_INSTALL_PATH ${INSTALL_DESTINATION_PREFIX})
+    set_property(GLOBAL PROPERTY COMPONENTS_IS_ENABLED_QT OFF)
+
+    # Add subdirectories
+    message(STATUS "[COMPONENTS] Searching for subprojects...")
+    foreach(CCR_PROJ_SUBDIR IN LISTS ARGN)
+        message(STATUS "[COMPONENTS] Checking " ${CCR_PROJ_SUBDIR})
+        add_subdirectory(${COMPONENTS_CCR_PROJECT_ROOTDIR}/${CCR_PROJ_SUBDIR})
+    endforeach()
+endfunction()
+
+
+# Tests for project
+function(ADD_EDITOR_TEST CCR_TESTNAME TESTING_SOURCES)
+
+    # Target
+    set(CCR_TEST_TARGETNAME TEST_${CCR_TESTNAME})
+    add_executable(${CCR_TEST_TARGETNAME})
+
+    # Sources
+    target_sources(${CCR_TEST_TARGETNAME} PRIVATE ${TESTING_SOURCES})
+    target_include_directories(${CCR_TEST_TARGETNAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+    # Linking
+    get_target_property(CCR_TARGET_LIBS ${CCR_TESTNAME} LINK_LIBRARIES)
+    target_link_libraries(
+        ${CCR_TEST_TARGETNAME} PRIVATE
+        GTest::gtest_main
+        GTest::gtest
+        ${CCR_TARGET_LIBS}
+    )
+
+    # Includes
+    get_target_property(EDITOR_MODULE_INCLUDES ${CCR_TESTNAME} INCLUDE_DIRECTORIES)
+    target_include_directories(${CCR_TEST_TARGETNAME} PUBLIC ${EDITOR_MODULE_INCLUDES})
+
+    # GTest
+    include(GoogleTest)
+    gtest_discover_tests(${CCR_TEST_TARGETNAME})
+
+    message(STATUS "[COMPONENTS] Added test: " ${CCR_TESTNAME})
+endfunction()

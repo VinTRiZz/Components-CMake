@@ -1,0 +1,62 @@
+# Local libraries configuration
+
+
+# Common library configuration function
+function(COMPONENTS_CCR_CONFIGURE_LIBRARY CCR_LIBRARY_NAME CCR_LIB_ROOT_DIR)
+    # Files
+    file(GLOB_RECURSE HEADERS "${CCR_LIB_ROOT_DIR}/src/*.hpp" "${CCR_LIB_ROOT_DIR}/src/*.h")
+    file(GLOB_RECURSE SOURCES "${CCR_LIB_ROOT_DIR}/src/*.cpp")
+    file(GLOB_RECURSE UIFILES "${CCR_LIB_ROOT_DIR}/src/*.ui")
+    source_group("Ui Files" FILES ${UIFILES})
+
+    # Library target
+    add_library(${CCR_LIBRARY_NAME} SHARED)
+    target_sources(${CCR_LIBRARY_NAME} PRIVATE ${HEADERS} ${SOURCES} ${UIFILES})
+
+    # Installation
+    install(TARGETS ${CCR_LIBRARY_NAME}
+        RUNTIME     DESTINATION ${INSTALL_DESTINATION_PREFIX}
+        LIBRARY     DESTINATION ${INSTALL_DESTINATION_PREFIX}/lib
+        ARCHIVE     DESTINATION ${INSTALL_DESTINATION_PREFIX}/lib/static
+        INCLUDES    DESTINATION ${INSTALL_DESTINATION_PREFIX}/include
+    )
+    set(CCR_LIBRARY_LINKS ${ARGN})
+
+    # Target linking
+    target_link_libraries(${CCR_LIBRARY_NAME} PRIVATE ${CCR_LIBRARY_LINKS} )
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(${CCR_LIBRARY_NAME} PRIVATE -g)
+        set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX ".so.DEBUG")
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+        target_compile_options(${CCR_LIBRARY_NAME} PRIVATE -O2)
+        set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX ".so")
+    endif()
+
+    # Includes
+    target_include_directories(${CCR_LIBRARY_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    target_include_directories(${CCR_LIBRARY_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+    message(STATUS "Configured library " ${CCR_LIBRARY_NAME})
+endfunction()
+
+
+# Library linking
+function(COMPONENTS_CCR_LINK_LIBRARY CCR_TARGET_NAME CCR_LIBRARY_NAME CCR_LIBRARY_ROOT_DIR)
+
+    # Checkup dir
+    if (NOT EXISTS ${CCR_LIBRARY_ROOT_DIR})
+        message(FATAL_ERROR "[COMPONENTS] Invalid ${CCR_LIBRARY_NAME} root directory: ${CCR_LIBRARY_ROOT_DIR}")
+        return()
+    endif()
+
+    # Checkup includes
+    set(LTL_LIBRARY_INCLUDE_DIR "${CCR_LIBRARY_ROOT_DIR}/include")
+    if (NOT EXISTS ${LTL_LIBRARY_INCLUDE_DIR})
+        message(FATAL_ERROR "[COMPONENTS] Error searching for includes of ${CCR_LIBRARY_NAME} (not found include dir)")
+        return()
+    endif()
+
+    # Linking
+    target_link_libraries(${CCR_TARGET_NAME} PRIVATE ${CCR_LIBRARY_NAME})
+    target_include_directories(${CCR_TARGET_NAME} PUBLIC ${LTL_LIBRARY_INCLUDE_DIR})
+    message(STATUS "Linking target " ${CCR_TARGET_NAME} " : added lib " ${CCR_LIBRARY_NAME})
+endfunction()
