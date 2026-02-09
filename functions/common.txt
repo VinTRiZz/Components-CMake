@@ -17,14 +17,15 @@ function (COMPONENTS_CCR_DEFINE_PROJECT CCR_PROJ_NAME CCR_PROJECT_VERSION)
     add_compile_definitions(PROJECT_NAME_STRING="${PROJECT_NAME}")
     message(STATUS "[COMPONENTS] Added C++ defines: PROJECT_NAME_STRING PROJECT_VERSION_STRING")
 
+    # TODO: Don't work when here, need to place into code before adding Components subdirectories
     # Installation
-    set(INSTALL_DESTINATION_PREFIX
-        "${CMAKE_CURRENT_SOURCE_DIR}/BIN"
-    )
+    #set(INSTALL_DESTINATION_PREFIX
+    #    "${COMPONENTS_CCR_PROJECT_ROOTDIR}/BIN"
+    #)
 
     # Defines for components libs
-    set_property(GLOBAL PROPERTY COMPONENTS_INSTALL_PATH ${INSTALL_DESTINATION_PREFIX})
-    set_property(GLOBAL PROPERTY COMPONENTS_IS_ENABLED_QT OFF)
+    #set_property(GLOBAL PROPERTY COMPONENTS_INSTALL_PATH ${INSTALL_DESTINATION_PREFIX})
+    #set_property(GLOBAL PROPERTY COMPONENTS_IS_ENABLED_QT OFF)
 
     # Add subdirectories
     message(STATUS "[COMPONENTS] Searching for subprojects...")
