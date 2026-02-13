@@ -19,13 +19,13 @@ endfunction()
 # Target to link into
 # Library to search (such as OpenCV)
 # all other args -- components of library to link (such as opencv_core, opencv_imgproc etc.)
-function (COMPONENTS_CCR_LINK_LIBRARY CCR_ALIASNAME)
+function (COMPONENTS_CCR_FIND_LIBRARY CCR_ALIASNAME)
     # Search for library
-    find_package(${CCR_LIBNAME} REQUIRED)
-
-    # Link it
-    target_link_libraries(${CCR_ALIASNAME} ${ARGN})
-
+    if (ARGN)
+        find_package(${CCR_ALIASNAME} REQUIRED ${ARGN})
+    else()
+        find_package(${CCR_ALIASNAME} REQUIRED)
+    endif()
     message(STATUS "[COMPONENTS] Found ${CCR_ALIASNAME} components: ${ARGN}")
 endfunction()
 
