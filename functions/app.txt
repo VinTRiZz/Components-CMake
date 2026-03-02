@@ -32,6 +32,8 @@ function(COMPONENTS_CCR_CONFIGURE_APP CCR_APP_NAME CCR_APP_ROOT_DIR)
         set_target_properties(${CCR_APP_NAME} PROPERTIES SUFFIX ".bin")
     endif()
 
+    target_include_directories(${CCR_APP_NAME} PRIVATE ${CCR_APP_ROOT_DIR}/src)
+
     # Includes
     message(STATUS "Configured application " ${CCR_APP_NAME})
 endfunction()
