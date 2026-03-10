@@ -37,10 +37,10 @@ endfunction()
 
 
 # Tests for project
-function(COMPONENTS_CCR_ADD_TEST CCR_TESTNAME TESTING_SOURCES)
+function(COMPONENTS_CCR_ADD_TEST CCR_TARGET_NAME TESTING_SOURCES)
 
     # Target
-    set(CCR_TEST_TARGETNAME TEST_${CCR_TESTNAME})
+    set(CCR_TEST_TARGETNAME TEST_${CCR_TARGET_NAME})
     add_executable(${CCR_TEST_TARGETNAME})
 
     # Sources
@@ -48,7 +48,14 @@ function(COMPONENTS_CCR_ADD_TEST CCR_TESTNAME TESTING_SOURCES)
     target_include_directories(${CCR_TEST_TARGETNAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
     # Linking
-    get_target_property(CCR_TARGET_LIBS ${CCR_TESTNAME} LINK_LIBRARIES)
+    get_target_property(CCR_TARGET_LIBS ${CCR_TARGET_NAME} LINK_LIBRARIES)
+
+    # Link to self if it's library
+    get_target_property(CCR_TARGET_TYPE ${CCR_TARGET_NAME} TYPE)
+    if (CCR_TARGET_TYPE MATCHES ".*_LIBRARY")
+        set(CCR_TARGET_LIBS ${CCR_TARGET_LIBS} ${CCR_TARGET_NAME})
+    endif()
+
     target_link_libraries(
         ${CCR_TEST_TARGETNAME} PRIVATE
         GTest::gtest_main
@@ -57,12 +64,12 @@ function(COMPONENTS_CCR_ADD_TEST CCR_TESTNAME TESTING_SOURCES)
     )
 
     # Includes
-    get_target_property(EDITOR_MODULE_INCLUDES ${CCR_TESTNAME} INCLUDE_DIRECTORIES)
+    get_target_property(EDITOR_MODULE_INCLUDES ${CCR_TARGET_NAME} INCLUDE_DIRECTORIES)
     target_include_directories(${CCR_TEST_TARGETNAME} PUBLIC ${EDITOR_MODULE_INCLUDES})
 
     # GTest
     include(GoogleTest)
     gtest_discover_tests(${CCR_TEST_TARGETNAME})
 
-    message(STATUS "[COMPONENTS] Added test: " ${CCR_TESTNAME})
+    message(STATUS "[COMPONENTS] Added test: " ${CCR_TARGET_NAME})
 endfunction()
