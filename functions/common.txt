@@ -37,14 +37,14 @@ endfunction()
 
 
 # Tests for project
-function(COMPONENTS_CCR_ADD_TEST CCR_TARGET_NAME TESTING_SOURCES)
+function(COMPONENTS_CCR_ADD_TEST CCR_TARGET_NAME ) # Other args is sources for test
 
     # Target
     set(CCR_TEST_TARGETNAME TEST_${CCR_TARGET_NAME})
     add_executable(${CCR_TEST_TARGETNAME})
 
     # Sources
-    target_sources(${CCR_TEST_TARGETNAME} PRIVATE ${TESTING_SOURCES})
+    target_sources(${CCR_TEST_TARGETNAME} PRIVATE ${ARGN})
     target_include_directories(${CCR_TEST_TARGETNAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
     # Linking
