@@ -4,6 +4,7 @@
 # Common library configuration function
 function(COMPONENTS_CCR_CONFIGURE_APP CCR_APP_NAME CCR_APP_ROOT_DIR)
     # Files
+    file(GLOB_RECURSE RESOURCES "${CCR_APP_ROOT_DIR}/resources/*.qrc")
     file(GLOB_RECURSE HEADERS "${CCR_APP_ROOT_DIR}/src/*.hpp" "${CCR_APP_ROOT_DIR}/src/*.h")
     file(GLOB_RECURSE SOURCES "${CCR_APP_ROOT_DIR}/src/*.cpp")
     file(GLOB_RECURSE UIFILES "${CCR_APP_ROOT_DIR}/src/*.ui")
@@ -11,7 +12,7 @@ function(COMPONENTS_CCR_CONFIGURE_APP CCR_APP_NAME CCR_APP_ROOT_DIR)
 
     # Library target
     add_executable(${CCR_APP_NAME})
-    target_sources(${CCR_APP_NAME} PRIVATE ${HEADERS} ${SOURCES} ${UIFILES})
+    target_sources(${CCR_APP_NAME} PRIVATE ${HEADERS} ${SOURCES} ${UIFILES} ${RESOURCES})
 
     # Installation
     install(TARGETS ${CCR_APP_NAME}
