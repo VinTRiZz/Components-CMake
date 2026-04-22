@@ -36,6 +36,21 @@ function (COMPONENTS_CCR_DEFINE_PROJECT CCR_PROJ_NAME CCR_PROJECT_VERSION)
 endfunction()
 
 
+# Enable Link Time Optimisation (LTO or InterProcedural Optimisation, IPO)
+# Used for many library projects, increases runtime speed at the cost of build time
+function(COMPONENTS_CCR_ENABLE_LTO)
+    cmake_policy(SET CMP0069 NEW) # Required for LTO
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT supported OUTPUT error)
+    if(supported)
+        message(STATUS "[COMPONENTS] LTO is supported and enabled")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    else()
+        message(WARNING "[COMPONENTS] LTO is not supported: ${error}")
+    endif()
+endfunction()
+
+
 # Tests for project
 function(COMPONENTS_CCR_ADD_TEST CCR_TARGET_NAME ) # Other args is sources for test
 
