@@ -28,7 +28,19 @@ function(COMPONENTS_CCR_CONFIGURE_LIBRARY CCR_LIBRARY_NAME CCR_LIB_ROOT_DIR)
         target_compile_options(${CCR_LIBRARY_NAME} PRIVATE -g)
         set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX ".so.DEBUG")
     elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-        target_compile_options(${CCR_LIBRARY_NAME} PRIVATE -O2)
+        if(MSVC)
+            # For MSVC
+            target_compile_options(${CCR_LIBRARY_NAME} PRIVATE /O2 /Gy)
+            # /OPT:REF — remove unused functions and data
+            # /OPT:ICF — remove function dublicates
+            target_link_options(${CCR_LIBRARY_NAME} PRIVATE /OPT:REF /OPT:ICF)
+        else()
+            # For GCC и Clang (Linux, macOS, MinGW)
+            target_compile_options(${CCR_LIBRARY_NAME} PRIVATE -O2 -ffunction-sections -fdata-sections)
+            target_link_options(${CCR_LIBRARY_NAME} PRIVATE -Wl,--gc-sections)
+        endif()
+        target_compile_options(${CCR_LIBRARY_NAME} PRIVATE -O2 -ffunction-sections -fdata-sections)
+        target_link_options(${CCR_LIBRARY_NAME} PRIVATE -Wl,--gc-sections)
         set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX ".so")
     endif()
 
