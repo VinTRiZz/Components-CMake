@@ -17,6 +17,9 @@ function(COMPONENTS_CCR_CONFIGURE_APP CCR_APP_NAME CCR_APP_ROOT_DIR)
     # Local constant for app
     target_compile_definitions(${CCR_APP_NAME} PRIVATE CCR_APP_TARGET_NAME="${CCR_APP_NAME}")
 
+    # For Qt using (and maybe others)
+    target_include_directories(${CCR_APP_NAME} PRIVATE "${CCR_APP_ROOT_DIR}/src")
+
     # Installation
     install(TARGETS ${CCR_APP_NAME}
         RUNTIME     DESTINATION ${INSTALL_DESTINATION_PREFIX}
