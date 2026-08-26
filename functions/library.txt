@@ -1,5 +1,12 @@
 # Local libraries configuration
 
+function(COMPONENTS_CCR_SET_LIBRARY_VERSION CCR_LIBRARY_NAME CCR_LIBRARY_VERSION)
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX "_${CCR_LIBRARY_VERSION}.DEBUG.so")
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+        set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX "_${CCR_LIBRARY_VERSION}.so")
+    endif()
+endfunction()
 
 # Common library configuration function
 function(COMPONENTS_CCR_CONFIGURE_LIBRARY CCR_LIBRARY_NAME CCR_LIB_ROOT_DIR)
