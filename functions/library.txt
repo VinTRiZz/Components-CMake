@@ -6,6 +6,7 @@ function(COMPONENTS_CCR_SET_LIBRARY_VERSION CCR_LIBRARY_NAME CCR_LIBRARY_VERSION
     elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
         set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX "_${CCR_LIBRARY_VERSION}.so")
     endif()
+    target_compile_definitions(${CCR_LIBRARY_NAME} PRIVATE CCR_LIB_VERSION="${CCR_LIBRARY_VERSION}")
 endfunction()
 
 # Common library configuration function
