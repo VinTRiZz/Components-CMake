@@ -4,4 +4,5 @@ include(common.txt)
 include(extlibraries.txt)
 include(app.txt)
 include(library.txt)
+include(conan.txt)
 
