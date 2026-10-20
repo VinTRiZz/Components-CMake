@@ -1,5 +1,4 @@
-# Common configuration
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.24) # for checking that linking is possible
 
 # C++ configuration
 set(CMAKE_CXX_STANDARD 17)

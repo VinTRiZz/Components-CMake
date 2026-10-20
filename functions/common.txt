@@ -1,6 +1,9 @@
 # Common functions
 
-# Project definition
+# Project definition function
+# CCR_PROJ_NAME         --> Name of a project. Can be used in targets
+# CCR_PROJECT_VERSION   --> Version string of a project
+# ARGN                  --> Subdirectories of a project
 function (COMPONENTS_CCR_DEFINE_PROJECT CCR_PROJ_NAME CCR_PROJECT_VERSION)
 
     # Components system variables
@@ -17,16 +20,6 @@ function (COMPONENTS_CCR_DEFINE_PROJECT CCR_PROJ_NAME CCR_PROJECT_VERSION)
     add_compile_definitions(PROJECT_NAME_STRING="${PROJECT_NAME}")
     message(STATUS "[COMPONENTS] Added C++ defines: PROJECT_NAME_STRING PROJECT_VERSION_STRING")
 
-    # TODO: Don't work when here, need to place into code before adding Components subdirectories
-    # Installation
-    #set(INSTALL_DESTINATION_PREFIX
-    #    "${COMPONENTS_CCR_PROJECT_ROOTDIR}/BIN"
-    #)
-
-    # Defines for components libs
-    #set_property(GLOBAL PROPERTY COMPONENTS_INSTALL_PATH ${INSTALL_DESTINATION_PREFIX})
-    #set_property(GLOBAL PROPERTY COMPONENTS_IS_ENABLED_QT OFF)
-
     # Add subdirectories
     message(STATUS "[COMPONENTS] Searching for subprojects...")
     foreach(CCR_PROJ_SUBDIR IN LISTS ARGN)
@@ -37,7 +30,6 @@ endfunction()
 
 
 # Enable Link Time Optimisation (LTO or InterProcedural Optimisation, IPO)
-# Used for many library projects, increases runtime speed at the cost of build time
 function(COMPONENTS_CCR_ENABLE_LTO)
     cmake_policy(SET CMP0069 NEW) # Required for LTO
     include(CheckIPOSupported)
@@ -51,24 +43,42 @@ function(COMPONENTS_CCR_ENABLE_LTO)
 endfunction()
 
 
-# Tests for project
+# Version of Qt and it's components to search and link
+# Search for Qt modules of a version
+function (COMPONENTS_CCR_ADD_QT CCR_QTVERS)
+    # Sugar
+    set(CMAKE_AUTOUIC ON)
+    set(CMAKE_AUTOMOC ON)
+    set(CMAKE_AUTORCC ON)
+
+    # Packages
+    find_package(QT NAMES Qt${CCR_QTVERS} REQUIRED COMPONENTS ${ARGN})
+    find_package(Qt${CCR_QTVERS} REQUIRED COMPONENTS ${ARGN})
+
+    message(STATUS "[COMPONENTS] Found Qt${CCR_QTVERS} components: ${ARGN}")
+endfunction()
+
+
+# Tests for project. Also links to all libraries host depend on
+# CCR_TARGET_NAME   --> Target to add tests for
+# ARGN              --> Sources of a test
 function(COMPONENTS_CCR_ADD_TEST CCR_TARGET_NAME ) # Other args is sources for test
 
     # Target
     set(CCR_TEST_TARGETNAME TEST_${CCR_TARGET_NAME})
-    add_executable(${CCR_TEST_TARGETNAME})
-
-    # Sources
-    target_sources(${CCR_TEST_TARGETNAME} PRIVATE ${ARGN})
+    add_executable(${CCR_TEST_TARGETNAME} ${ARGN})
     target_include_directories(${CCR_TEST_TARGETNAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
-
-    # Linking
-    get_target_property(CCR_TARGET_LIBS ${CCR_TARGET_NAME} LINK_LIBRARIES)
 
     # Link to self if it's library
     get_target_property(CCR_TARGET_TYPE ${CCR_TARGET_NAME} TYPE)
+    get_target_property(CCR_TARGET_LIBS ${CCR_TARGET_NAME} LINK_LIBRARIES)
     if (CCR_TARGET_TYPE MATCHES ".*_LIBRARY")
         set(CCR_TARGET_LIBS ${CCR_TARGET_LIBS} ${CCR_TARGET_NAME})
+    endif()
+
+    # Remove not found libraries (in most cases, it's not built yet libs)
+    if(CCR_TARGET_LIBS)
+        list(FILTER CCR_TARGET_LIBS EXCLUDE REGEX ".*NOTFOUND")
     endif()
 
     target_link_libraries(
@@ -87,4 +97,29 @@ function(COMPONENTS_CCR_ADD_TEST CCR_TARGET_NAME ) # Other args is sources for t
     gtest_discover_tests(${CCR_TEST_TARGETNAME})
 
     message(STATUS "[COMPONENTS] Added test: " ${CCR_TARGET_NAME})
+endfunction()
+
+
+# Library linking
+# CCR_TARGET_NAME       --> Target to link to
+# CCR_LIBRARY_NAME      --> Library to link
+# CCR_LIBRARY_ROOT_DIR  --> Directory where "include" stated
+function(COMPONENTS_CCR_LINK_LIBRARY CCR_TARGET_NAME CCR_LIBRARY_NAME CCR_LIBRARY_ROOT_DIR)
+    if (NOT EXISTS ${CCR_LIBRARY_ROOT_DIR})
+        message(FATAL_ERROR "[COMPONENTS] Invalid ${CCR_LIBRARY_NAME} root directory: ${CCR_LIBRARY_ROOT_DIR}")
+        return()
+    endif()
+
+    # Checkup includes
+    set(LTL_LIBRARY_INCLUDE_DIR "${CCR_LIBRARY_ROOT_DIR}/include")
+    if (NOT EXISTS ${LTL_LIBRARY_INCLUDE_DIR})
+        message(FATAL_ERROR "[COMPONENTS] Error searching for includes of ${CCR_LIBRARY_NAME} (not found include dir)")
+        return()
+    endif()
+
+    # Linking
+    target_link_libraries(${CCR_TARGET_NAME} PRIVATE ${CCR_LIBRARY_NAME})
+    target_include_directories(${CCR_TARGET_NAME} PUBLIC ${LTL_LIBRARY_INCLUDE_DIR})
+
+    message(STATUS "Linking target " ${CCR_TARGET_NAME} " : added lib " ${CCR_LIBRARY_NAME})
 endfunction()

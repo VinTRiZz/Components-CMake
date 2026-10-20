@@ -1,23 +1,42 @@
 # Local apps configuration
 
+# ================================================== #
+# Example of expected application structure:
+# MyApp
+#   | --> CMakeLists.txt
+#   | --> resources
+#           | --> my_resources.qrc
+#   | --> src
+#           | --> myclass.hpp
+#           | --> myclass.cpp
+#           | --> myclass.ui
+#           | --> my_c_lib_interface.h
+#           | --> my_c_lib_interface.c
+# ================================================== #
 
-# Common library configuration function
+
+# Common app configuration function
+# CCR_APP_NAME      --> Executable binary name (target name)
+# CCR_APP_ROOT_DIR  --> Root directory of an application
 function(COMPONENTS_CCR_CONFIGURE_APP CCR_APP_NAME CCR_APP_ROOT_DIR)
     # Files
     file(GLOB_RECURSE RESOURCES "${CCR_APP_ROOT_DIR}/resources/*.qrc")
     file(GLOB_RECURSE HEADERS "${CCR_APP_ROOT_DIR}/src/*.hpp" "${CCR_APP_ROOT_DIR}/src/*.h")
-    file(GLOB_RECURSE SOURCES "${CCR_APP_ROOT_DIR}/src/*.cpp")
+    file(GLOB_RECURSE SOURCES "${CCR_APP_ROOT_DIR}/src/*.cpp" "${CCR_APP_ROOT_DIR}/src/*.c")
     file(GLOB_RECURSE UIFILES "${CCR_APP_ROOT_DIR}/src/*.ui")
     source_group("Ui Files" FILES ${UIFILES})
 
-    # Library target
-    add_executable(${CCR_APP_NAME})
-    target_sources(${CCR_APP_NAME} PRIVATE ${HEADERS} ${SOURCES} ${UIFILES} ${RESOURCES})
+    # Check depends
+    COMPONENTS_CHECK_LIBS(${ARGN})
 
-    # Local constant for app
+    # Library target. Adding sources here just for older CMake versions
+    add_executable(${CCR_APP_NAME}
+        ${HEADERS} ${SOURCES} ${UIFILES} ${RESOURCES}
+    )
+    target_link_libraries(${CCR_APP_NAME} PRIVATE ${ARGN})
     target_compile_definitions(${CCR_APP_NAME} PRIVATE CCR_APP_TARGET_NAME="${CCR_APP_NAME}")
 
-    # For Qt using (and maybe others)
+    # For Qt UI forms
     target_include_directories(${CCR_APP_NAME} PRIVATE "${CCR_APP_ROOT_DIR}/src")
 
     # Installation
@@ -27,10 +46,8 @@ function(COMPONENTS_CCR_CONFIGURE_APP CCR_APP_NAME CCR_APP_ROOT_DIR)
         ARCHIVE     DESTINATION ${INSTALL_DESTINATION_PREFIX}/lib/static
         INCLUDES    DESTINATION ${INSTALL_DESTINATION_PREFIX}/include
     )
-    set(CCR_LIBRARY_LINKS ${ARGN})
 
-    # Target linking
-    target_link_libraries(${CCR_APP_NAME} PRIVATE ${CCR_LIBRARY_LINKS} )
+    # Build flag configuring
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         target_compile_options(${CCR_APP_NAME} PRIVATE -g)
         set_target_properties(${CCR_APP_NAME} PROPERTIES SUFFIX "_${PROJECT_VERSION}.bin.DEBUG")
@@ -48,8 +65,6 @@ function(COMPONENTS_CCR_CONFIGURE_APP CCR_APP_NAME CCR_APP_ROOT_DIR)
         endif()
         set_target_properties(${CCR_APP_NAME} PROPERTIES SUFFIX "_${PROJECT_VERSION}.bin")
     endif()
-
-    target_include_directories(${CCR_APP_NAME} PRIVATE ${CCR_APP_ROOT_DIR}/src)
 
     # Includes
     message(STATUS "Configured application " ${CCR_APP_NAME})

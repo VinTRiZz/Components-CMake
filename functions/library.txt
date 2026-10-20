@@ -1,5 +1,25 @@
+# ====================================== #
 # Local libraries configuration
+#
+# ========== EXAMPLE OF USAGE: =========
+#
+# Just copy this into another Component and write your values
+#
+# COMPONENTS_CCR_CONFIGURE_LIBRARY(
+#    false
+#    MyExtraLibrary
+#    boost_system
+# )
+# COMPONENTS_CCR_SET_LIBRARY_VERSION(MyExtraLibrary "1.0.0")
+#
+# COMPONENTS_LINK_COMPONENT(Common Logger)
+#
+# ====================================== #
 
+
+# Configuring library version
+# CCR_LIBRARY_NAME      --> Library name to set version of
+# CCR_LIBRARY_VERSION   --> Version string
 function(COMPONENTS_CCR_SET_LIBRARY_VERSION CCR_LIBRARY_NAME CCR_LIBRARY_VERSION)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX "_${CCR_LIBRARY_VERSION}.DEBUG.so")
@@ -9,17 +29,44 @@ function(COMPONENTS_CCR_SET_LIBRARY_VERSION CCR_LIBRARY_NAME CCR_LIBRARY_VERSION
     target_compile_definitions(${CCR_LIBRARY_NAME} PRIVATE CCR_LIB_VERSION="${CCR_LIBRARY_VERSION}")
 endfunction()
 
+
 # Common library configuration function
-function(COMPONENTS_CCR_CONFIGURE_LIBRARY CCR_LIBRARY_NAME CCR_LIB_ROOT_DIR)
+# CCR_LIBRARY_NAME      --> Library target name to configure
+# CCR_IS_LIB_STATIC     --> true / false to use static or shared mode
+# CCR_LIB_ROOT_DIR      --> Root directory of a library (where sources directory stated)
+# ARGN                  --> Libraries that target require
+function(COMPONENTS_CCR_CONFIGURE_LIBRARY CCR_IS_LIB_STATIC CCR_LIBRARY_NAME CCR_LIB_ROOT_DIR)
+    if (NOT CCR_IS_LIB_STATIC MATCHES "TRUE|FALSE|true|false|ON|on|OFF|off")
+        message(FATAL_ERROR "[COMPONENTS] Invalid library type (expected TRUE / FALSE or ON / OFF): " ${CCR_IS_LIB_STATIC})
+        return()
+    endif()
+
+    if (NOT EXISTS ${CCR_LIB_ROOT_DIR})
+        message(FATAL_ERROR "[COMPONENTS] Invalid ${CCR_LIBRARY_NAME} root directory: ${CCR_LIBRARY_ROOT_DIR}")
+        return()
+    endif()
+
     # Files
     file(GLOB_RECURSE HEADERS "${CCR_LIB_ROOT_DIR}/src/*.hpp" "${CCR_LIB_ROOT_DIR}/src/*.h")
-    file(GLOB_RECURSE SOURCES "${CCR_LIB_ROOT_DIR}/src/*.cpp")
+    file(GLOB_RECURSE SOURCES "${CCR_LIB_ROOT_DIR}/src/*.cpp" "${CCR_LIB_ROOT_DIR}/src/*.c")
     file(GLOB_RECURSE UIFILES "${CCR_LIB_ROOT_DIR}/src/*.ui")
     source_group("Ui Files" FILES ${UIFILES})
 
     # Library target
-    add_library(${CCR_LIBRARY_NAME} SHARED)
-    target_sources(${CCR_LIBRARY_NAME} PRIVATE ${HEADERS} ${SOURCES} ${UIFILES})
+    if ( CCR_IS_LIB_STATIC )
+        add_library(${CCR_LIBRARY_NAME} STATIC
+            ${HEADERS} ${SOURCES} ${UIFILES}
+        )
+    else()
+        add_library(${CCR_LIBRARY_NAME} SHARED
+            ${HEADERS} ${SOURCES} ${UIFILES}
+        )
+    endif()
+    target_include_directories(${CCR_LIBRARY_NAME} PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    )
+    target_link_libraries(${CCR_LIBRARY_NAME} PRIVATE ${ARGN})
 
     # Installation
     install(TARGETS ${CCR_LIBRARY_NAME}
@@ -28,11 +75,10 @@ function(COMPONENTS_CCR_CONFIGURE_LIBRARY CCR_LIBRARY_NAME CCR_LIB_ROOT_DIR)
         ARCHIVE     DESTINATION ${INSTALL_DESTINATION_PREFIX}/lib/static
         INCLUDES    DESTINATION ${INSTALL_DESTINATION_PREFIX}/include
     )
-    set(CCR_LIBRARY_LINKS ${ARGN})
 
-    # Target linking
-    target_link_libraries(${CCR_LIBRARY_NAME} PRIVATE ${CCR_LIBRARY_LINKS} )
+    # Build type processing
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        add_compile_definitions(BUILD_MODE_DEBUG)
         target_compile_options(${CCR_LIBRARY_NAME} PRIVATE -g)
         set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX ".so.DEBUG")
     elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -52,31 +98,5 @@ function(COMPONENTS_CCR_CONFIGURE_LIBRARY CCR_LIBRARY_NAME CCR_LIB_ROOT_DIR)
         set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX ".so")
     endif()
 
-    # Includes
-    target_include_directories(${CCR_LIBRARY_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-    target_include_directories(${CCR_LIBRARY_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     message(STATUS "Configured library " ${CCR_LIBRARY_NAME})
-endfunction()
-
-
-# Library linking
-function(COMPONENTS_CCR_LINK_LIBRARY CCR_TARGET_NAME CCR_LIBRARY_NAME CCR_LIBRARY_ROOT_DIR)
-
-    # Checkup dir
-    if (NOT EXISTS ${CCR_LIBRARY_ROOT_DIR})
-        message(FATAL_ERROR "[COMPONENTS] Invalid ${CCR_LIBRARY_NAME} root directory: ${CCR_LIBRARY_ROOT_DIR}")
-        return()
-    endif()
-
-    # Checkup includes
-    set(LTL_LIBRARY_INCLUDE_DIR "${CCR_LIBRARY_ROOT_DIR}/include")
-    if (NOT EXISTS ${LTL_LIBRARY_INCLUDE_DIR})
-        message(FATAL_ERROR "[COMPONENTS] Error searching for includes of ${CCR_LIBRARY_NAME} (not found include dir)")
-        return()
-    endif()
-
-    # Linking
-    target_link_libraries(${CCR_TARGET_NAME} PRIVATE ${CCR_LIBRARY_NAME})
-    target_include_directories(${CCR_TARGET_NAME} PUBLIC ${LTL_LIBRARY_INCLUDE_DIR})
-    message(STATUS "Linking target " ${CCR_TARGET_NAME} " : added lib " ${CCR_LIBRARY_NAME})
 endfunction()
