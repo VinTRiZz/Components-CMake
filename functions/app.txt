@@ -26,9 +26,6 @@ function(COMPONENTS_CCR_CONFIGURE_APP CCR_APP_NAME CCR_APP_ROOT_DIR)
     file(GLOB_RECURSE UIFILES "${CCR_APP_ROOT_DIR}/src/*.ui")
     source_group("Ui Files" FILES ${UIFILES})
 
-    # Check depends
-    COMPONENTS_CHECK_LIBS(${ARGN})
-
     # Library target. Adding sources here just for older CMake versions
     add_executable(${CCR_APP_NAME}
         ${HEADERS} ${SOURCES} ${UIFILES} ${RESOURCES}
