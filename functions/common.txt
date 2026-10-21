@@ -123,3 +123,15 @@ function(COMPONENTS_CCR_LINK_LIBRARY CCR_TARGET_NAME CCR_LIBRARY_NAME CCR_LIBRAR
 
     message(STATUS "Linking target " ${CCR_TARGET_NAME} " : added lib " ${CCR_LIBRARY_NAME})
 endfunction()
+
+
+# Target sources removing
+# CCR_TARGET_NAME   --> Target to edit
+# ARGN              --> Sources list to remove (must be same as in target)
+function(COMPONENTS_REMOVE_SOURCES CCR_TARGET_NAME)
+    get_target_property(CCR_CURRENT_SOURCES ${CCR_TARGET_NAME} SOURCES)
+    foreach(SOURCE_FILE ${ARGN})
+        list(REMOVE_ITEM CCR_CURRENT_SOURCES ${SOURCE_FILE})
+    endforeach()
+    set_target_properties(${CCR_TARGET_NAME} PROPERTIES SOURCES "${CCR_CURRENT_SOURCES}")
+endfunction()
