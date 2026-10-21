@@ -47,9 +47,9 @@ endfunction()
 # Search for Qt modules of a version
 function (COMPONENTS_CCR_ADD_QT CCR_QTVERS)
     # Sugar
-    set(CMAKE_AUTOUIC ON)
-    set(CMAKE_AUTOMOC ON)
-    set(CMAKE_AUTORCC ON)
+    set(CMAKE_AUTOUIC ON PARENT_SCOPE)
+    set(CMAKE_AUTOMOC ON PARENT_SCOPE)
+    set(CMAKE_AUTORCC ON PARENT_SCOPE)
 
     # Packages
     find_package(QT NAMES Qt${CCR_QTVERS} REQUIRED COMPONENTS ${ARGN})
