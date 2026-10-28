@@ -127,7 +127,7 @@ function(COMPONENTS_CCR_LINK_LIBRARY CCR_TARGET_NAME CCR_LIBRARY_NAME CCR_LIBRAR
     target_link_libraries(${CCR_TARGET_NAME} PRIVATE ${CCR_LIBRARY_NAME})
     target_include_directories(${CCR_TARGET_NAME} PUBLIC ${LTL_LIBRARY_INCLUDE_DIR})
 
-    message(STATUS "Linking target " ${CCR_TARGET_NAME} " : added lib " ${CCR_LIBRARY_NAME})
+    message(STATUS "[COMPONENTS] Linking target " ${CCR_TARGET_NAME} " : added lib " ${CCR_LIBRARY_NAME})
 endfunction()
 
 

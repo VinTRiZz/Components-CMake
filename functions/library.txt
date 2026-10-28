@@ -20,11 +20,17 @@
 # Configuring library version
 # CCR_LIBRARY_NAME      --> Library name to set version of
 # CCR_LIBRARY_VERSION   --> Version string
-function(COMPONENTS_CCR_SET_LIBRARY_VERSION CCR_LIBRARY_NAME CCR_LIBRARY_VERSION)
+function(COMPONENTS_CCR_SET_LIBRARY_VERSION CCR_LIBRARY_NAME CCR_LIBRARY_VERSION CCR_IS_LIB_STATIC)
+    if(${CCR_IS_LIB_STATIC})
+        set(CCR_SUFFX "a")
+    else()
+        set(CCR_SUFFX "so")
+    endif()
+
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX "_${CCR_LIBRARY_VERSION}.DEBUG.so")
+        set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX "_${CCR_LIBRARY_VERSION}.DEBUG.${CCR_SUFFX}")
     elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-        set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX "_${CCR_LIBRARY_VERSION}.so")
+        set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX "_${CCR_LIBRARY_VERSION}.${CCR_SUFFX}")
     endif()
     target_compile_definitions(${CCR_LIBRARY_NAME} PRIVATE CCR_LIB_VERSION="${CCR_LIBRARY_VERSION}")
 endfunction()
@@ -53,11 +59,13 @@ function(COMPONENTS_CCR_CONFIGURE_LIBRARY CCR_IS_LIB_STATIC CCR_LIBRARY_NAME CCR
     source_group("Ui Files" FILES ${UIFILES})
 
     # Library target
-    if ( CCR_IS_LIB_STATIC )
+    if ( ${CCR_IS_LIB_STATIC} )
+        message(STATUS "[COMPONENTS] Configuring STATIC library ${CCR_LIBRARY_NAME}")
         add_library(${CCR_LIBRARY_NAME} STATIC
             ${HEADERS} ${SOURCES} ${UIFILES}
         )
     else()
+        message(STATUS "[COMPONENTS] Configuring SHARED library ${CCR_LIBRARY_NAME}")
         add_library(${CCR_LIBRARY_NAME} SHARED
             ${HEADERS} ${SOURCES} ${UIFILES}
         )
@@ -80,7 +88,6 @@ function(COMPONENTS_CCR_CONFIGURE_LIBRARY CCR_IS_LIB_STATIC CCR_LIBRARY_NAME CCR
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         add_compile_definitions(BUILD_MODE_DEBUG)
         target_compile_options(${CCR_LIBRARY_NAME} PRIVATE -g)
-        set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX ".so.DEBUG")
     elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
         if(MSVC)
             # For MSVC
@@ -95,8 +102,7 @@ function(COMPONENTS_CCR_CONFIGURE_LIBRARY CCR_IS_LIB_STATIC CCR_LIBRARY_NAME CCR
         endif()
         target_compile_options(${CCR_LIBRARY_NAME} PRIVATE -O2 -ffunction-sections -fdata-sections)
         target_link_options(${CCR_LIBRARY_NAME} PRIVATE -Wl,--gc-sections)
-        set_target_properties(${CCR_LIBRARY_NAME} PROPERTIES SUFFIX ".so")
     endif()
 
-    message(STATUS "Configured library " ${CCR_LIBRARY_NAME})
+    message(STATUS "[COMPONENTS] Configured library " ${CCR_LIBRARY_NAME})
 endfunction()

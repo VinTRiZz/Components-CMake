@@ -17,9 +17,9 @@
 # ====================================== #
 
 # Options
-option(COMPONENTS_IS_ENABLED_QT OFF)
-option(COMPONENTS_BUILD_STATIC ON)
-option(COMPONENTS_ENABLE_TESTS OFF)
+option(COMPONENTS_IS_ENABLED_QT "Allows using Qt" OFF)
+option(COMPONENTS_BUILD_STATIC "Allows building Components as static libraries" ON)
+option(COMPONENTS_ENABLE_TESTS "Allows building tests for components" OFF)
 
 # Root directory of a components
 get_property(COMPONENTS_COMPONENT_ROOT_DIR GLOBAL PROPERTY COMPONENTS_COMPONENT_ROOT_DIR)
@@ -80,7 +80,7 @@ function(COMPONENTS_CONFIGURE_COMPONENT COMPONENT_NAME COMPONENT_VERSION)
     if (COMPONENTS_IS_ENABLED_QT)
         target_compile_definitions(Components-${COMPONENT_NAME} PRIVATE -DCOMPONENTS_IS_ENABLED_QT)
     endif()
-    COMPONENTS_CCR_SET_LIBRARY_VERSION(Components-${COMPONENT_NAME} ${COMPONENT_VERSION})
+    COMPONENTS_CCR_SET_LIBRARY_VERSION(Components-${COMPONENT_NAME} ${COMPONENT_VERSION} ${COMPONENTS_BUILD_STATIC})
 endfunction()
 
 
