@@ -88,6 +88,10 @@ endfunction()
 # COMPONENT_NAME    --> Target of a component
 # ARGN              --> Sources of a component
 function(COMPONENTS_ADD_COMPONENT_TEST COMPONENT_NAME)
+    if (NOT ${COMPONENTS_ENABLE_TESTS})
+        return()
+    endif()
+
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests" OR NOT TARGET GTest::gtest)
         message(WARNING "[COMPONENTS] Failed to add tests for component: ${COMPONENT_NAME}")
         return()
