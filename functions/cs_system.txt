@@ -71,16 +71,32 @@ endfunction()
 # ARGN                  --> Libraries, component require to work
 function(COMPONENTS_CONFIGURE_COMPONENT COMPONENT_NAME COMPONENT_VERSION)
     get_property(COMPONENTS_COMPONENT_ROOT_DIR GLOBAL PROPERTY COMPONENTS_COMPONENT_ROOT_DIR)
-    COMPONENTS_CCR_CONFIGURE_LIBRARY(
-        ${COMPONENTS_BUILD_STATIC}
-        Components-${COMPONENT_NAME}
-        ${COMPONENTS_COMPONENT_ROOT_DIR}/Components-${COMPONENT_NAME}
-        ${ARGN}
-    )
+
+    # Android packages require project libraries to be statically linked into
+    # the application shared library. Use the Android-aware wrapper there.
+    COMPONENTS_CCR_IS_ANDROID(CCR_IS_ANDROID_BUILD)
+    if (CCR_IS_ANDROID_BUILD)
+        set(CCR_COMPONENT_IS_STATIC TRUE)
+        COMPONENTS_CCR_CONFIGURE_ANDROID_LIB(
+            ${CCR_COMPONENT_IS_STATIC}
+            Components-${COMPONENT_NAME}
+            ${COMPONENTS_COMPONENT_ROOT_DIR}/Components-${COMPONENT_NAME}
+            ${ARGN}
+        )
+    else()
+        set(CCR_COMPONENT_IS_STATIC ${COMPONENTS_BUILD_STATIC})
+        COMPONENTS_CCR_CONFIGURE_LIBRARY(
+            ${CCR_COMPONENT_IS_STATIC}
+            Components-${COMPONENT_NAME}
+            ${COMPONENTS_COMPONENT_ROOT_DIR}/Components-${COMPONENT_NAME}
+            ${ARGN}
+        )
+    endif()
+
     if (COMPONENTS_IS_ENABLED_QT)
         target_compile_definitions(Components-${COMPONENT_NAME} PRIVATE -DCOMPONENTS_IS_ENABLED_QT)
     endif()
-    COMPONENTS_CCR_SET_LIBRARY_VERSION(Components-${COMPONENT_NAME} ${COMPONENT_VERSION} ${COMPONENTS_BUILD_STATIC})
+    COMPONENTS_CCR_SET_LIBRARY_VERSION(Components-${COMPONENT_NAME} ${COMPONENT_VERSION} ${CCR_COMPONENT_IS_STATIC})
 endfunction()
 
 

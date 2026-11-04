@@ -29,6 +29,17 @@ function (COMPONENTS_CCR_DEFINE_PROJECT CCR_PROJ_NAME CCR_PROJECT_VERSION)
 endfunction()
 
 
+# Android build detection
+# CCR_OUT --> TRUE / FALSE
+function(COMPONENTS_CCR_IS_ANDROID CCR_OUT)
+    if (ANDROID OR CMAKE_SYSTEM_NAME STREQUAL "Android")
+        set(${CCR_OUT} TRUE PARENT_SCOPE)
+    else()
+        set(${CCR_OUT} FALSE PARENT_SCOPE)
+    endif()
+endfunction()
+
+
 # Enable Link Time Optimisation (LTO or InterProcedural Optimisation, IPO)
 function(COMPONENTS_CCR_ENABLE_LTO)
     cmake_policy(SET CMP0069 NEW) # Required for LTO
