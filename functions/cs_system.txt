@@ -113,11 +113,11 @@ function(COMPONENTS_ADD_COMPONENT_TEST COMPONENT_NAME)
         return()
     endif()
 
-    file(GLOB TESTING_SOURCES "tests/*.cpp")
-    set(COMPONENT_TEST_TARGET TEST_Components-${COMPONENT_NAME})
+    file(GLOB TESTING_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp")
     COMPONENTS_CCR_ADD_TEST(Components-${COMPONENT_NAME} ${TESTING_SOURCES})
 
     # Workaround with function (crutch?)
+    set(COMPONENT_TEST_TARGET TEST_Components-${COMPONENT_NAME})
     target_link_libraries(${COMPONENT_TEST_TARGET} PRIVATE Components-${COMPONENT_NAME})
 
     get_target_property(COMPONENT_MODULE_INCLUDES Components-${COMPONENT_NAME} INCLUDE_DIRECTORIES)
@@ -129,3 +129,32 @@ function(COMPONENTS_ADD_COMPONENT_TEST COMPONENT_NAME)
     endif()
 endfunction()
 
+
+# Components benchmark adding function
+# COMPONENT_NAME    --> Target of a component
+# ARGN              --> Sources of a component
+function(COMPONENTS_ADD_BENCHMARK COMPONENT_NAME)
+    if (NOT ${COMPONENTS_ENABLE_TESTS})
+        return()
+    endif()
+
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks" OR NOT TARGET benchmark::benchmark_main)
+        message(WARNING "[COMPONENTS] Failed to add benchmark for component: ${COMPONENT_NAME}")
+        return()
+    endif()
+
+    file(GLOB TESTING_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/*.cpp")
+    COMPONENTS_CCR_ADD_BENCHMARK(Components-${COMPONENT_NAME} ${TESTING_SOURCES})
+
+    # Workaround with function (crutch?)
+    set(COMPONENT_TEST_TARGET TEST_BENCHMARK_Components-${COMPONENT_NAME})
+    target_link_libraries(${COMPONENT_TEST_TARGET} PRIVATE Components-${COMPONENT_NAME})
+
+    get_target_property(COMPONENT_MODULE_INCLUDES Components-${COMPONENT_NAME} INCLUDE_DIRECTORIES)
+    target_include_directories(${COMPONENT_TEST_TARGET} PUBLIC ${COMPONENT_MODULE_INCLUDES})
+
+    # Header fixing
+    if (COMPONENTS_IS_ENABLED_QT)
+        target_compile_definitions(${COMPONENT_TEST_TARGET} PRIVATE -DCOMPONENTS_IS_ENABLED_QT)
+    endif()
+endfunction()

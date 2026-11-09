@@ -92,6 +92,7 @@ function(COMPONENTS_CCR_ADD_TEST CCR_TARGET_NAME ) # Other args is sources for t
         list(FILTER CCR_TARGET_LIBS EXCLUDE REGEX ".*NOTFOUND")
     endif()
 
+    # Google Test linking
     target_link_libraries(
         ${CCR_TEST_TARGETNAME} PRIVATE
         GTest::gtest_main
@@ -117,7 +118,71 @@ function(COMPONENTS_CCR_ADD_TEST CCR_TARGET_NAME ) # Other args is sources for t
 endfunction()
 
 
-# Library linking
+# Benchmarks for project. Also links to all libraries host depend on
+# CCR_TARGET_NAME   --> Target to add tests for
+# ARGN              --> Sources of a test
+function(COMPONENTS_CCR_ADD_BENCHMARK CCR_TARGET_NAME )
+
+    # Target
+    set(CCR_TEST_TARGETNAME TEST_BENCHMARK_${CCR_TARGET_NAME})
+    add_executable(${CCR_TEST_TARGETNAME} ${ARGN})
+    target_include_directories(${CCR_TEST_TARGETNAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+    # Link to self if it's library
+    get_target_property(CCR_TARGET_TYPE ${CCR_TARGET_NAME} TYPE)
+    get_target_property(CCR_TARGET_LIBS ${CCR_TARGET_NAME} LINK_LIBRARIES)
+    if (CCR_TARGET_TYPE MATCHES ".*_LIBRARY")
+        set(CCR_TARGET_LIBS ${CCR_TARGET_LIBS} ${CCR_TARGET_NAME})
+    endif()
+
+    # Remove not found libraries (in most cases, it's not built yet libs)
+    if(CCR_TARGET_LIBS)
+        list(FILTER CCR_TARGET_LIBS EXCLUDE REGEX ".*NOTFOUND")
+    endif()
+
+    # Remove internal test building
+    set(BENCHMARK_ENABLE_TESTING OFF CACHE INTERNAL "")
+    set(BENCHMARK_ENABLE_EXCEPTIONS ON CACHE INTERNAL "")
+
+    # GTest issues
+    set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE INTERNAL "")
+    set(BENCHMARK_ENABLE_INSTALL OFF CACHE INTERNAL "")
+
+    # Google Benchmark linking
+    target_link_libraries(
+        ${CCR_TEST_TARGETNAME} PRIVATE
+        benchmark::benchmark_main
+        ${CCR_TARGET_LIBS}
+    )
+
+    # Copy defines from target
+    target_compile_definitions(${CCR_TEST_TARGETNAME} PRIVATE
+        $<TARGET_PROPERTY:${CCR_TARGET_NAME},COMPILE_DEFINITIONS>
+        $<TARGET_PROPERTY:${CCR_TARGET_NAME},INTERFACE_COMPILE_DEFINITIONS>
+    )
+
+    # Includes
+    get_target_property(EDITOR_MODULE_INCLUDES ${CCR_TARGET_NAME} INCLUDE_DIRECTORIES)
+    target_include_directories(${CCR_TEST_TARGETNAME} PUBLIC ${EDITOR_MODULE_INCLUDES})
+
+    # Compile options
+    if(MSVC)
+        # For MSVC
+        target_compile_options(${CCR_TEST_TARGETNAME} PRIVATE /O2 /Gy)
+        # /OPT:REF — remove unused functions and data
+        # /OPT:ICF — remove function dublicates
+        target_link_options(${CCR_TEST_TARGETNAME} PRIVATE /OPT:REF /OPT:ICF)
+    else()
+        # For GCC и Clang (Linux, macOS, MinGW)
+        target_compile_options(${CCR_TEST_TARGETNAME} PRIVATE -O2 -ffunction-sections -fdata-sections)
+        target_link_options(${CCR_TEST_TARGETNAME} PRIVATE -Wl,--gc-sections)
+    endif()
+    set_target_properties(${CCR_TEST_TARGETNAME} PROPERTIES SUFFIX ".bin")
+
+    message(STATUS "[COMPONENTS] Added benchmark test: " ${CCR_TARGET_NAME})
+endfunction()
+
+
 # CCR_TARGET_NAME       --> Target to link to
 # CCR_LIBRARY_NAME      --> Library to link
 # CCR_LIBRARY_ROOT_DIR  --> Directory where "include" stated
