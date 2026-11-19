@@ -11,4 +11,11 @@ endif()
 
 enable_testing()
 add_subdirectory(${TESTING_GTEST_DIR})  # Linking: GTest::gtest, GTest::gtest_main
+
+set( BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "Unused feature" FORCE)
+set( BENCHMARK_ENABLE_INSTALL     OFF CACHE BOOL "Unused feature" FORCE)
+set( BENCHMARK_ENABLE_TESTING     OFF CACHE BOOL "Unused feature" FORCE)
+set( BENCHMARK_ENABLE_WERROR      OFF CACHE BOOL "Unused feature" FORCE)
+set( BENCHMARK_INSTALL_DOCS       OFF CACHE BOOL "Unused feature" FORCE)
+set( BENCHMARK_INSTALL_TOOLS      OFF CACHE BOOL "Unused feature" FORCE)
 add_subdirectory(${TESTING_GBENCHMARK_DIR})
