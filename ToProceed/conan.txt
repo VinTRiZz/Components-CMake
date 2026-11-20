@@ -28,6 +28,8 @@
 # work unchanged.
 # ============================================================================
 
+option(COMPONENTS_CCR_CONAN_INCLUDED OFF)
+
 # Include guard: the project may include this file more than once.
 if (COMPONENTS_CCR_CONAN_INCLUDED)
     return()
