@@ -107,8 +107,8 @@ function(COMPONENTS_CCR_ADD_TEST CCR_TARGET_NAME ) # Other args is sources for t
     )
 
     # Includes
-    get_target_property(EDITOR_MODULE_INCLUDES ${CCR_TARGET_NAME} INCLUDE_DIRECTORIES)
-    target_include_directories(${CCR_TEST_TARGETNAME} PUBLIC ${EDITOR_MODULE_INCLUDES})
+    get_target_property(CCR_TARGET_INCLUDES ${CCR_TARGET_NAME} INCLUDE_DIRECTORIES)
+    target_include_directories(${CCR_TEST_TARGETNAME} PUBLIC ${CCR_TARGET_INCLUDES})
 
     # GTest
     include(GoogleTest)
@@ -161,10 +161,6 @@ function(COMPONENTS_CCR_ADD_BENCHMARK CCR_TARGET_NAME )
         $<TARGET_PROPERTY:${CCR_TARGET_NAME},INTERFACE_COMPILE_DEFINITIONS>
     )
 
-    # Includes
-    get_target_property(EDITOR_MODULE_INCLUDES ${CCR_TARGET_NAME} INCLUDE_DIRECTORIES)
-    target_include_directories(${CCR_TEST_TARGETNAME} PUBLIC ${EDITOR_MODULE_INCLUDES})
-
     # Compile options
     if(MSVC)
         # For MSVC
@@ -193,15 +189,13 @@ function(COMPONENTS_CCR_LINK_LIBRARY CCR_TARGET_NAME CCR_LIBRARY_NAME CCR_LIBRAR
     endif()
 
     # Checkup includes
-    set(LTL_LIBRARY_INCLUDE_DIR "${CCR_LIBRARY_ROOT_DIR}/include")
-    if (NOT EXISTS ${LTL_LIBRARY_INCLUDE_DIR})
+    set(CCR_LIBRARY_INCLUDE_DIR "${CCR_LIBRARY_ROOT_DIR}/include")
+    if (NOT EXISTS ${CCR_LIBRARY_INCLUDE_DIR})
         message(FATAL_ERROR "[COMPONENTS] Error searching for includes of ${CCR_LIBRARY_NAME} (not found include dir)")
         return()
     endif()
 
-    # Linking
     target_link_libraries(${CCR_TARGET_NAME} PRIVATE ${CCR_LIBRARY_NAME})
-    target_include_directories(${CCR_TARGET_NAME} PUBLIC ${LTL_LIBRARY_INCLUDE_DIR})
 
     message(STATUS "[COMPONENTS] Linking target " ${CCR_TARGET_NAME} " : added lib " ${CCR_LIBRARY_NAME})
 endfunction()
